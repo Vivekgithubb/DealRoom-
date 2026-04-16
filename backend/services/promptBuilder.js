@@ -1,9 +1,9 @@
 /**
  * Prompt Builder
- * 
+ *
  * Builds structured prompts for each of the 4 agents.
  * All prompts instruct Gemini to return JSON only.
- * 
+ *
  * Agent 1: Strategist (setup)
  * Agent 2: Whisperer (real-time, per "Them" turn)
  * Agent 3: Closer (report)
@@ -50,9 +50,10 @@ Return only JSON. No preamble. No markdown fences.`;
  */
 function buildWhisperPrompt(context) {
   const turnsFormatted = formatTurns(context.turns);
-  const latestTurn = context.turns.length > 0
-    ? context.turns[context.turns.length - 1].text
-    : "";
+  const latestTurn =
+    context.turns.length > 0
+      ? context.turns[context.turns.length - 1].text
+      : "";
 
   return `You are a real-time negotiation coach. The user is in an active negotiation.
 
@@ -87,16 +88,24 @@ Return only JSON. No preamble. No markdown fences.`;
  * Agent 3 — Closer
  * Runs once when session ends. Generates the full report.
  */
-function buildReportPrompt({ deal_type, goal, walkaway, playbook_summary, transcript, whispers }) {
+function buildReportPrompt({
+  deal_type,
+  goal,
+  walkaway,
+  playbook_summary,
+  transcript,
+  whispers,
+}) {
   const fullTranscript = formatTurns(transcript);
 
   // Build tactics summary from whisper history
   const tacticsUsed = whispers
     .filter((w) => w.tactic && w.tactic !== "unknown")
     .map((w) => w.tactic);
-  const tacticsSummary = tacticsUsed.length > 0
-    ? [...new Set(tacticsUsed)].join(", ")
-    : "No specific tactics detected.";
+  const tacticsSummary =
+    tacticsUsed.length > 0
+      ? [...new Set(tacticsUsed)].join(", ")
+      : "No specific tactics detected.";
 
   return `You are a negotiation analyst. Analyze this completed negotiation session.
 
