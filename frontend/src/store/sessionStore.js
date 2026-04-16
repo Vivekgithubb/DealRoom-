@@ -1,6 +1,6 @@
 /**
  * Zustand Session Store
- * 
+ *
  * Central state management for the entire DealRoom application.
  * All real-time updates flow through here.
  */
@@ -29,6 +29,7 @@ const useSessionStore = create((set, get) => ({
 
   // Simulation data
   simulation: null,
+  behaviorMode: "balanced",
 
   // Loading states
   isLoading: false,
@@ -63,6 +64,7 @@ const useSessionStore = create((set, get) => ({
 
   setReport: (report) => set({ report }),
   setSimulation: (simulation) => set({ simulation }),
+  setBehaviorMode: (mode) => set({ behaviorMode: mode }),
 
   setLoading: (isLoading) => set({ isLoading }),
   setError: (error) => set({ error }),
@@ -85,6 +87,7 @@ const useSessionStore = create((set, get) => ({
       phase: "setup",
       report: null,
       simulation: null,
+      behaviorMode: "balanced",
       isLoading: false,
       error: null,
       isListening: false,

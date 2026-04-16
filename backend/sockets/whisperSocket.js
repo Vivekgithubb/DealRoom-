@@ -19,7 +19,7 @@ const { getSession } = require("../utils/sessionStore");
 const { FALLBACK_WHISPER } = require("../contracts");
 
 async function handleWhisperTurn(socket, data, io) {
-  const { text, session_id } = data;
+  const { text, session_id, behaviorMode } = data;
 
   if (!text || !session_id) {
     socket.emit("whisper:error", { message: "Missing text or session_id." });
@@ -41,7 +41,10 @@ async function handleWhisperTurn(socket, data, io) {
   });
 
   // Reduce context to last 7 turns
-  const reducedContext = reduceContext(session, 7);
+  const reducedContext = {
+    ...reduceContext(session, 7),
+    behavior: behaviorMode || "balanced"
+  };
 
   // Build the prompt — single call, returns all fields
   const prompt = buildWhisperPrompt(reducedContext);

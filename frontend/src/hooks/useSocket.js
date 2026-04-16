@@ -16,6 +16,7 @@ export function useSocket() {
   const addWhisper = useSessionStore((s) => s.addWhisper);
   const setError = useSessionStore((s) => s.setError);
   const sessionId = useSessionStore((s) => s.sessionId);
+  const behaviorMode = useSessionStore((s) => s.behaviorMode);
 
   useEffect(() => {
     const socket = io(SOCKET_URL, {
@@ -69,6 +70,7 @@ export function useSocket() {
         socketRef.current.emit("turn:them", {
           text,
           session_id: sessionId,
+          behaviorMode,
         });
         console.log("[Socket] Emitted turn:them:", text);
       } else {
@@ -76,7 +78,7 @@ export function useSocket() {
         setError("Socket not connected. Please refresh.");
       }
     },
-    [sessionId, setError]
+    [sessionId, behaviorMode, setError]
   );
 
   // Emit "turn:me" event (stores in backend transcript)

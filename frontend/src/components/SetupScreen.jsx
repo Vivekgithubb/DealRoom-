@@ -7,6 +7,8 @@ export default function SetupScreen() {
   const setDealContext = useSessionStore((s) => s.setDealContext);
   const setPlaybook = useSessionStore((s) => s.setPlaybook);
   const setPhase = useSessionStore((s) => s.setPhase);
+  const behaviorMode = useSessionStore((s) => s.behaviorMode);
+  const setBehaviorMode = useSessionStore((s) => s.setBehaviorMode);
 
   const [formData, setFormData] = useState({
     deal_type: "",
@@ -226,7 +228,11 @@ export default function SetupScreen() {
           {/* Simulator Section */}
           {showSimulator && simulation && (
             <div style={{ marginTop: "var(--space-6)" }}>
-              <SimulatorInline simulation={simulation} />
+              <SimulatorInline 
+                simulation={simulation} 
+                selectedMode={behaviorMode}
+                onSelectMode={(mode) => setBehaviorMode(mode)}
+              />
             </div>
           )}
 
@@ -246,12 +252,17 @@ export default function SetupScreen() {
               )}
             </button>
 
-            <button
-              className="btn btn-success btn-lg"
-              onClick={handleStartSession}
-            >
-              🎤 Start Live Session
-            </button>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", alignItems: "center" }}>
+              <div style={{ fontWeight: "bold", color: "var(--color-primary)", marginBottom: "8px" }}>
+                Active Style: {behaviorMode.toUpperCase()}
+              </div>
+              <button
+                className="btn btn-success btn-lg"
+                onClick={handleStartSession}
+              >
+                🎤 Start Live Session
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -260,7 +271,7 @@ export default function SetupScreen() {
 }
 
 // Inline simulator component
-function SimulatorInline({ simulation }) {
+function SimulatorInline({ simulation, selectedMode, onSelectMode }) {
   const riskColors = {
     low: "var(--color-success)",
     medium: "var(--color-warning)",
@@ -287,12 +298,25 @@ function SimulatorInline({ simulation }) {
       </p>
 
       <div className="simulator-grid">
-        {simulation.paths?.map((path) => (
-          <div
-            key={path.strategy}
-            className={`sim-card ${path.strategy}`}
-          >
-            <div className="sim-card-strategy">{path.strategy}</div>
+        {simulation.paths?.map((path) => {
+          // Map "conservative" to "defensive" for UI if necessary, though paths return "conservative"
+          const isSelected = selectedMode === path.strategy || (selectedMode === "defensive" && path.strategy === "conservative");
+          return (
+            <div
+              key={path.strategy}
+              className={`sim-card ${path.strategy}`}
+              onClick={() => onSelectMode(path.strategy === "conservative" ? "defensive" : path.strategy)}
+              style={{
+                cursor: "pointer",
+                outline: isSelected ? "3px solid var(--color-primary)" : "none",
+                transform: isSelected ? "scale(1.02)" : "scale(1)",
+                transition: "all 0.2s ease"
+              }}
+            >
+              <div className="sim-card-strategy">
+                {path.strategy === "conservative" ? "defensive" : path.strategy}
+                {isSelected && " (Selected)"}
+              </div>
             <div className="sim-card-label">{path.label}</div>
             <div className="sim-card-description">{path.description}</div>
 
@@ -339,7 +363,8 @@ function SimulatorInline({ simulation }) {
               {path.tradeoff}
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

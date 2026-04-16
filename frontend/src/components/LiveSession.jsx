@@ -13,6 +13,7 @@ export default function LiveSession() {
   const setPhase = useSessionStore((s) => s.setPhase);
   const currentWhisper = useSessionStore((s) => s.currentWhisper);
   const playbookSummary = useSessionStore((s) => s.playbookSummary);
+  const behaviorMode = useSessionStore((s) => s.behaviorMode);
 
   const { emitThemTurn, emitMeTurn } = useSocket();
 
@@ -42,15 +43,16 @@ export default function LiveSession() {
   );
 
   // Submit a turn
-  const handleSubmitTurn = () => {
+  const handleSubmitTurn = (overrideSpeaker) => {
+    const activeSpeaker = overrideSpeaker || speaker;
     const text = manualInput.trim();
     if (!text) return;
 
     // Add turn to local state
-    addTurn({ speaker, text });
+    addTurn({ speaker: activeSpeaker, text });
 
     // If speaker is "them", emit to backend for AI processing
-    if (speaker === "them") {
+    if (activeSpeaker === "them") {
       emitThemTurn(text);
     } else {
       // Store "me" turn in backend transcript too
@@ -59,6 +61,13 @@ export default function LiveSession() {
 
     setManualInput("");
     setInterimText("");
+  };
+
+  const handleSpeakerClick = (tgtSpeaker) => {
+    setSpeaker(tgtSpeaker);
+    if (manualInput.trim()) {
+      handleSubmitTurn(tgtSpeaker);
+    }
   };
 
   const handleKeyDown = (e) => {
@@ -115,13 +124,13 @@ export default function LiveSession() {
           <div className="speaker-toggle">
             <button
               className={`speaker-btn ${speaker === "me" ? "active-me" : ""}`}
-              onClick={() => setSpeaker("me")}
+              onClick={() => handleSpeakerClick("me")}
             >
               Me
             </button>
             <button
               className={`speaker-btn ${speaker === "them" ? "active-them" : ""}`}
-              onClick={() => setSpeaker("them")}
+              onClick={() => handleSpeakerClick("them")}
             >
               Them
             </button>
@@ -186,15 +195,36 @@ export default function LiveSession() {
           <div className="card" style={{ padding: "var(--space-4)" }}>
             <div
               style={{
-                fontSize: "var(--text-xs)",
-                color: "var(--color-text-muted)",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
                 marginBottom: "var(--space-2)",
-                fontWeight: "var(--font-semibold)",
-                textTransform: "uppercase",
-                letterSpacing: "0.05em",
               }}
             >
-              📋 Your Strategy
+              <div
+                style={{
+                  fontSize: "var(--text-xs)",
+                  color: "var(--color-text-muted)",
+                  fontWeight: "var(--font-semibold)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                📋 Your Strategy
+              </div>
+              <div
+                style={{
+                  fontSize: "0.7rem",
+                  padding: "2px 6px",
+                  borderRadius: "12px",
+                  backgroundColor: "var(--color-primary-light)",
+                  color: "white",
+                  fontWeight: "bold",
+                  textTransform: "uppercase",
+                }}
+              >
+                {behaviorMode}
+              </div>
             </div>
             <p
               style={{
