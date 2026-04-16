@@ -19,12 +19,24 @@ function initGemini() {
     return;
   }
   genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  model = genai.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
+  model = genai.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+  console.log("API KEY:", process.env.GEMINI_API_KEY);
+}
+
+async function testModels() {
+  try {
+    const models = await genai.listModels();
+    console.log("Available models:", models);
+  } catch (err) {
+    console.error("ListModels Error:", err.message);
+  }
 }
 
 async function callGemini(prompt, maxTokens = 300) {
   if (!model) {
     initGemini();
+    testModels();
   }
   if (!model) {
     throw new Error("Gemini model not initialized. Check GEMINI_API_KEY.");
