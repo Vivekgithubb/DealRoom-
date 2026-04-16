@@ -1,10 +1,10 @@
 /**
  * Gemini Flash Wrapper
- * 
+ *
  * Model: gemini-1.5-flash
  * Temperature: 0.3 (low = faster, more consistent JSON)
  * Max tokens: ~300 (keeps responses tight)
- * 
+ *
  * Always returns JSON only from the model.
  */
 
@@ -19,7 +19,7 @@ function initGemini() {
     return;
   }
   genai = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-  model = genai.getGenerativeModel({ model: "gemini-1.5-flash" });
+  model = genai.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
 }
 
 async function callGemini(prompt, maxTokens = 300) {
