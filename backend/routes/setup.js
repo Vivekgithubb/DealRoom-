@@ -38,12 +38,12 @@ router.post("/", async (req, res) => {
 
     // Build prompt and call Gemini (Agent 1)
     const prompt = buildSetupPrompt(dealContext);
-    const raw = await callGemini(prompt, 500);
-
     let playbook;
     try {
+      const raw = await callGemini(prompt, 500);
       playbook = parseGeminiJSON(raw);
-    } catch (parseErr) {
+    } catch (apiErr) {
+      console.error("Gemini API or parse error:", apiErr.message);
       console.error("Setup prompt parse error:", parseErr.message);
       // Return a fallback playbook
       playbook = {

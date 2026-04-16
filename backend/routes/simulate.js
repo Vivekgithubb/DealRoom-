@@ -36,12 +36,12 @@ router.post("/", async (req, res) => {
       playbook_summary: session.playbookSummary,
     });
 
-    const raw = await callGemini(prompt, 600);
-
     let simulation;
     try {
+      const raw = await callGemini(prompt, 600);
       simulation = parseGeminiJSON(raw);
-    } catch (parseErr) {
+    } catch (apiErr) {
+      console.error("Gemini API or parse error:", apiErr.message);
       console.error("Simulate parse error:", parseErr.message);
       // Return fallback simulation paths
       simulation = {

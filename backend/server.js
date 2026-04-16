@@ -21,14 +21,14 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: process.env.CLIENT_URL || "http://localhost:5174",
     methods: ["GET", "POST"],
   },
 });
 
 // Middleware
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: process.env.CLIENT_URL || "http://localhost:5174",
 }));
 app.use(express.json());
 
@@ -75,10 +75,10 @@ io.on("connection", (socket) => {
 // Initialize Gemini on startup
 initGemini();
 
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8000;
 server.listen(PORT, () => {
   console.log(`\n🏢 DealRoom Backend running on port ${PORT}`);
   console.log(`   REST API:   http://localhost:${PORT}/api`);
   console.log(`   Socket.io:  ws://localhost:${PORT}`);
-  console.log(`   Client URL: ${process.env.CLIENT_URL || "http://localhost:5173"}\n`);
+  console.log(`   Client URL: ${process.env.CLIENT_URL || "http://localhost:5174"}\n`);
 });
