@@ -49,12 +49,12 @@ router.post("/", async (req, res) => {
     });
 
     // Agent 3 needs more tokens for the full report
-    const raw = await callGemini(prompt, 800);
-
     let report;
     try {
+      const raw = await callGemini(prompt, 800);
       report = parseGeminiJSON(raw);
-    } catch (parseErr) {
+    } catch (apiErr) {
+      console.error("Gemini API or parse error:", apiErr.message);
       console.error("Report parse error:", parseErr.message);
       report = {
         summary: "The negotiation session has been completed. Review your transcript for key moments.",
