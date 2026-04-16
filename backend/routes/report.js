@@ -55,7 +55,6 @@ router.post("/", async (req, res) => {
       report = parseGeminiJSON(raw);
     } catch (apiErr) {
       console.error("Gemini API or parse error:", apiErr.message);
-      console.error("Report parse error:", parseErr.message);
       report = {
         summary: "The negotiation session has been completed. Review your transcript for key moments.",
         wins: ["Session completed"],

@@ -1,12 +1,12 @@
 /**
  * useSTT Hook — Speech-to-Text abstraction
- * 
+ *
  * Primary: Deepgram real-time WebSocket streaming
  * Fallback: Web Speech API (browser-based)
- * 
+ *
  * Automatically falls back if Deepgram fails.
  * Both outputs are normalized to the same format.
- * 
+ *
  * STT Output Contract:
  * { text: "string", isFinal: boolean, speaker: "me" | "them" }
  */
@@ -16,92 +16,93 @@ import { useState, useRef, useCallback } from "react";
 const USE_DEEPGRAM = import.meta.env.VITE_USE_DEEPGRAM === "true";
 
 export function useSTT(onTranscript, onInterim) {
-  if (USE_DEEPGRAM) {
-    return useDeepgramSTT(onTranscript, onInterim);
-  }
-  return useWebSpeechSTT(onTranscript, onInterim);
+  // if (USE_DEEPGRAM) {
+  //   return useDeepgramSTT(onTranscript, onInterim);
+  // }
+  // return useWebSpeechSTT(onTranscript, onInterim);
+  return useDeepgramSTT(onTranscript, onInterim);
 }
 
 // --- Web Speech API (fallback, default for dev) ---
-function useWebSpeechSTT(onTranscript, onInterim) {
-  const recognitionRef = useRef(null);
-  const [isListening, setIsListening] = useState(false);
+// function useWebSpeechSTT(onTranscript, onInterim) {
+//   const recognitionRef = useRef(null);
+//   const [isListening, setIsListening] = useState(false);
 
-  const start = useCallback(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+//   const start = useCallback(() => {
+//     const SpeechRecognition =
+//       window.SpeechRecognition || window.webkitSpeechRecognition;
 
-    if (!SpeechRecognition) {
-      alert("Speech recognition not supported. Please use Chrome.");
-      return;
-    }
+//     if (!SpeechRecognition) {
+//       alert("Speech recognition not supported. Please use Chrome.");
+//       return;
+//     }
 
-    const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
+//     const recognition = new SpeechRecognition();
+//     recognitionRef.current = recognition;
 
-    recognition.continuous = true;
-    recognition.interimResults = true;
-    recognition.lang = "en-US";
+//     recognition.continuous = true;
+//     recognition.interimResults = true;
+//     recognition.lang = "en-US";
 
-    recognition.onresult = (event) => {
-      const last = event.results[event.results.length - 1];
-      const text = last[0].transcript.trim();
+//     recognition.onresult = (event) => {
+//       const last = event.results[event.results.length - 1];
+//       const text = last[0].transcript.trim();
 
-      if (last.isFinal) {
-        onTranscript(text);
-        if (onInterim) onInterim("");
-      } else {
-        if (onInterim) onInterim(text);
-      }
-    };
+//       if (last.isFinal) {
+//         onTranscript(text);
+//         if (onInterim) onInterim("");
+//       } else {
+//         if (onInterim) onInterim(text);
+//       }
+//     };
 
-    recognition.onerror = (e) => {
-      console.error("STT error:", e.error);
-      if (e.error === "not-allowed") {
-        alert("Microphone access denied. Please allow microphone access.");
-      }
-      // Auto-restart on recoverable errors
-      if (e.error === "network" || e.error === "aborted") {
-        setTimeout(() => {
-          if (recognitionRef.current) {
-            try {
-              recognitionRef.current.start();
-            } catch (err) {
-              // Already started, ignore
-            }
-          }
-        }, 1000);
-      } else {
-        setIsListening(false);
-      }
-    };
+//     recognition.onerror = (e) => {
+//       console.error("STT error:", e.error);
+//       if (e.error === "not-allowed") {
+//         alert("Microphone access denied. Please allow microphone access.");
+//       }
+//       // Auto-restart on recoverable errors
+//       if (e.error === "network" || e.error === "aborted") {
+//         setTimeout(() => {
+//           if (recognitionRef.current) {
+//             try {
+//               recognitionRef.current.start();
+//             } catch (err) {
+//               // Already started, ignore
+//             }
+//           }
+//         }, 1000);
+//       } else {
+//         setIsListening(false);
+//       }
+//     };
 
-    recognition.onend = () => {
-      // Auto-restart if still supposed to be listening
-      if (recognitionRef.current && isListening) {
-        try {
-          recognitionRef.current.start();
-        } catch (err) {
-          // Already started, ignore
-        }
-      }
-    };
+//     recognition.onend = () => {
+//       // Auto-restart if still supposed to be listening
+//       if (recognitionRef.current && isListening) {
+//         try {
+//           recognitionRef.current.start();
+//         } catch (err) {
+//           // Already started, ignore
+//         }
+//       }
+//     };
 
-    recognition.start();
-    setIsListening(true);
-  }, [onTranscript, onInterim, isListening]);
+//     recognition.start();
+//     setIsListening(true);
+//   }, [onTranscript, onInterim, isListening]);
 
-  const stop = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.onend = null; // Prevent auto-restart
-      recognitionRef.current.stop();
-      recognitionRef.current = null;
-    }
-    setIsListening(false);
-  }, []);
+//   const stop = useCallback(() => {
+//     if (recognitionRef.current) {
+//       recognitionRef.current.onend = null; // Prevent auto-restart
+//       recognitionRef.current.stop();
+//       recognitionRef.current = null;
+//     }
+//     setIsListening(false);
+//   }, []);
 
-  return { start, stop, isListening };
-}
+//   return { start, stop, isListening };
+// }
 
 // --- Deepgram (production) ---
 function useDeepgramSTT(onTranscript, onInterim) {
@@ -110,6 +111,20 @@ function useDeepgramSTT(onTranscript, onInterim) {
   const streamRef = useRef(null);
   const [isListening, setIsListening] = useState(false);
   const fallbackRef = useRef(false);
+  const cleanupDeepgram = useCallback(() => {
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((t) => t.stop());
+      streamRef.current = null;
+    }
+  }, []);
 
   const start = useCallback(async () => {
     try {
@@ -117,7 +132,7 @@ function useDeepgramSTT(onTranscript, onInterim) {
       streamRef.current = stream;
 
       const ws = new WebSocket(
-        "wss://api.deepgram.com/v1/listen?encoding=opus&sample_rate=16000&model=nova-2&punctuate=true&interim_results=true",
+        "wss://api.deepgram.com/v1/listen?model=nova-2&punctuate=true&interim_results=true",
         ["token", import.meta.env.VITE_DEEPGRAM_KEY]
       );
 
@@ -157,7 +172,9 @@ function useDeepgramSTT(onTranscript, onInterim) {
       };
 
       ws.onerror = () => {
-        console.warn("[Deepgram] WebSocket error — falling back to Web Speech API");
+        console.warn(
+          "[Deepgram] WebSocket error — falling back to Web Speech API"
+        );
         if (!fallbackRef.current) {
           fallbackRef.current = true;
           cleanupDeepgram();
@@ -175,21 +192,6 @@ function useDeepgramSTT(onTranscript, onInterim) {
       startWebSpeechFallback(onTranscript, onInterim, setIsListening);
     }
   }, [onTranscript, onInterim]);
-
-  const cleanupDeepgram = useCallback(() => {
-    if (mediaRecorderRef.current) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current = null;
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((t) => t.stop());
-      streamRef.current = null;
-    }
-  }, []);
 
   const stop = useCallback(() => {
     cleanupDeepgram();
