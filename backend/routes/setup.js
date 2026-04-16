@@ -1,11 +1,11 @@
 /**
  * Setup Route — Agent 1 (Strategist)
- * 
+ *
  * POST /api/setup
- * 
+ *
  * Input: deal_type, goal, walkaway, counterparty_context
  * Output: playbook_summary, opening_move, key_leverage[], red_lines[]
- * 
+ *
  * Stores only the summary in session — not the full playbook.
  */
 
@@ -13,11 +13,16 @@ const express = require("express");
 const router = express.Router();
 const { callGemini, parseGeminiJSON } = require("../services/gemini");
 const { buildSetupPrompt } = require("../services/promptBuilder");
-const { createSession, getSession, updateSession } = require("../utils/sessionStore");
+const {
+  createSession,
+  getSession,
+  updateSession,
+} = require("../utils/sessionStore");
 
 router.post("/", async (req, res) => {
   try {
-    const { deal_type, goal, walkaway, counterparty_context, session_id } = req.body;
+    const { deal_type, goal, walkaway, counterparty_context, session_id } =
+      req.body;
 
     if (!deal_type || !goal || !walkaway || !session_id) {
       return res.status(400).json({
@@ -31,7 +36,7 @@ router.post("/", async (req, res) => {
     let session = getSession(session_id);
     if (session) {
       updateSession(session_id, { dealContext, transcript: [], whispers: [] });
-      session = getSession(session_id);
+      session = getSession(session_id, dealContext);
     } else {
       session = createSession(session_id, dealContext);
     }
@@ -44,11 +49,12 @@ router.post("/", async (req, res) => {
       playbook = parseGeminiJSON(raw);
     } catch (apiErr) {
       console.error("Gemini API or parse error:", apiErr.message);
-      console.error("Setup prompt parse error:", parseErr.message);
       // Return a fallback playbook
       playbook = {
-        playbook_summary: "Prepare your key points, know your walkaway, and maintain composure. Focus on value creation rather than pure price negotiation. Build rapport first, then discuss terms.",
-        opening_move: "Start by establishing rapport and understanding their priorities before stating your position.",
+        playbook_summary:
+          "Prepare your key points, know your walkaway, and maintain composure. Focus on value creation rather than pure price negotiation. Build rapport first, then discuss terms.",
+        opening_move:
+          "Start by establishing rapport and understanding their priorities before stating your position.",
         key_leverage: [
           "Your unique value proposition",
           "Market alternatives",
